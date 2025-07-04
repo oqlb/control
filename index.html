@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>자이로 센서 Tilt 측정 (Landscape 지원)</title>
+  <title>자이로 센서 Tilt & Rotation 측정</title>
   <style>
     body {
       display: flex;
@@ -46,19 +46,21 @@
   <button id="enable">모션 센서 활성화</button>
 
   <div class="reading">
+    <p>Alpha (회전 각도): <span id="alpha">0</span>°</p>
     <p>Gamma (좌/우 기울기): <span id="gamma">0</span>°</p>
     <p>Beta (앞/뒤 기울기): <span id="beta">0</span>°</p>
-    <p>Orientation: <span id="orient">0</span>°</p>
+    <p>Orientation (화면 회전): <span id="orient">0</span>°</p>
   </div>
 
   <script>
     const btn     = document.getElementById('enable');
     const reading = document.querySelector('.reading');
+    const $alpha  = document.getElementById('alpha');
     const $gamma  = document.getElementById('gamma');
     const $beta   = document.getElementById('beta');
     const $orient = document.getElementById('orient');
 
-    // 화면 회전 각도(0, 90, 180, 270) 반환
+    // 화면 회전 각도 반환 (0, 90, 180, 270)
     function getScreenAngle() {
       if (screen.orientation && typeof screen.orientation.angle === 'number') {
         return screen.orientation.angle;
@@ -68,21 +70,37 @@
 
     // 센서 데이터 핸들러
     function handleOrientation(event) {
-      const rawG = event.gamma; // 좌/우 tilt
-      const rawB = event.beta;  // 앞/뒤 tilt
+      // event.alpha: Z축 회전(0~360), event.gamma: 좌/우 tilt, event.beta: 앞/뒤 tilt
+      let rawA = event.alpha;
+      let rawG = event.gamma;
+      let rawB = event.beta;
       const angle = getScreenAngle();
       $orient.textContent = angle;
 
+      // 화면 회전 보정 (γ, β만 보정; α는 전역 기준)
       let gamma = rawG, beta = rawB;
       if (angle === 90)       { gamma = rawB;  beta = -rawG; }
       else if (angle === 270) { gamma = -rawB; beta = rawG; }
       else if (angle === 180) { gamma = -rawG; beta = -rawB; }
 
-      $gamma.textContent = Math.round(gamma);
-      $beta.textContent  = Math.round(beta);
+      // 화면에 표시
+      $alpha.textContent = rawA !== null ? Math.round(rawA) : '–';
+      $gamma.textContent = rawG !== null ? Math.round(gamma) : '–';
+      $beta.textContent  = rawB !== null ? Math.round(beta)  : '–';
     }
 
-    // 권한 요청 및 이벤트 등록 (iOS 13+ 지원)
+    // 권한 요청 및 리스너 등록
+    function startReading() {
+      reading.style.display = 'block';
+      btn.style.display = 'none';
+      window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener('orientationchange', () => {
+        $orient.textContent = getScreenAngle();
+      });
+      // 초기 화면 회전값 표시
+      $orient.textContent = getScreenAngle();
+    }
+
     btn.addEventListener('click', () => {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
@@ -98,22 +116,9 @@
             alert('권한 요청 중 오류가 발생했습니다.');
           });
       } else {
-        // iOS <13 또는 안드로이드/데스크탑
         startReading();
       }
     });
-
-    // 센서 리스너 시작
-    function startReading() {
-      reading.style.display = 'block';
-      btn.style.display = 'none';
-      window.addEventListener('deviceorientation', handleOrientation);
-      window.addEventListener('orientationchange', () => {
-        $orient.textContent = getScreenAngle();
-      });
-      // 초기 회전값 표시
-      $orient.textContent = getScreenAngle();
-    }
   </script>
 
 </body>
