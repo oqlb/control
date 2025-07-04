@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>자이로 센서 Tilt 측정 (Landscape 지원)</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+      background: #f0f0f0;
+    }
+    #enable {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: #007aff;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.2s;
+    }
+    #enable:hover {
+      background: #005bb5;
+    }
+    .reading {
+      display: none;
+      background: #fff;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .reading p { margin: 0.5rem 0; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+  <button id="enable">모션 센서 활성화</button>
+
+  <div class="reading">
+    <p>Gamma (좌/우 기울기): <span id="gamma">0</span>°</p>
+    <p>Beta (앞/뒤 기울기): <span id="beta">0</span>°</p>
+    <p>Orientation: <span id="orient">0</span>°</p>
+  </div>
+
+  <script>
+    const btn     = document.getElementById('enable');
+    const reading = document.querySelector('.reading');
+    const $gamma  = document.getElementById('gamma');
+    const $beta   = document.getElementById('beta');
+    const $orient = document.getElementById('orient');
+
+    // 화면 회전 각도(0, 90, 180, 270) 반환
+    function getScreenAngle() {
+      if (screen.orientation && typeof screen.orientation.angle === 'number') {
+        return screen.orientation.angle;
+      }
+      return window.orientation || 0;
+    }
+
+    // 센서 데이터 핸들러
+    function handleOrientation(event) {
+      const rawG = event.gamma; // 좌/우 tilt
+      const rawB = event.beta;  // 앞/뒤 tilt
+      const angle = getScreenAngle();
+      $orient.textContent = angle;
+
+      let gamma = rawG, beta = rawB;
+      if (angle === 90)       { gamma = rawB;  beta = -rawG; }
+      else if (angle === 270) { gamma = -rawB; beta = rawG; }
+      else if (angle === 180) { gamma = -rawG; beta = -rawB; }
+
+      $gamma.textContent = Math.round(gamma);
+      $beta.textContent  = Math.round(beta);
+    }
+
+    // 권한 요청 및 이벤트 등록 (iOS 13+ 지원)
+    btn.addEventListener('click', () => {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              startReading();
+            } else {
+              alert('센서 권한이 거부되었습니다.');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('권한 요청 중 오류가 발생했습니다.');
+          });
+      } else {
+        // iOS <13 또는 안드로이드/데스크탑
+        startReading();
+      }
+    });
+
+    // 센서 리스너 시작
+    function startReading() {
+      reading.style.display = 'block';
+      btn.style.display = 'none';
+      window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener('orientationchange', () => {
+        $orient.textContent = getScreenAngle();
+      });
+      // 초기 회전값 표시
+      $orient.textContent = getScreenAngle();
+    }
+  </script>
+
+</body>
+</html>
