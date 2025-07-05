@@ -58,7 +58,7 @@
         $.ajax({
             url: 'http://oqlb.dothome.co.kr/a.php',
             method: 'post',
-            data : {"dev": param[0], "com": param[1]},
+            data : {"dev": cl[0], "com": cl[1]},
             dataType : 'html',
             success: function (data) {
                 if(data == "FALSE") {
@@ -80,7 +80,7 @@
         $.ajax({
             url: 'http://oqlb.dothome.co.kr/r.php',
             method: 'post',
-            data : {"dev": param[0], "com": param[1], "di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
+            data : {"dev": cl[0], "com": cl[1], "di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
             dataType : 'html',
             success: function (data) {
                 if(data == "FALSE") {
@@ -142,6 +142,8 @@
       $di.textContent = rawA !== null ? Math.round(rawA) : '–';
       $ex.textContent = rawG !== null ? Math.round(gamma) : '–';
       $dr.textContent  = rawB !== null ? Math.round(beta)  : '–';
+
+      send();
     }
 
     // 권한 요청 및 리스너 등록
@@ -149,11 +151,7 @@
       reading.style.display = 'block';
       btn.style.display = 'none';
       window.addEventListener('deviceorientation', handleOrientation);
-      window.addEventListener('orientationchange', () => {
-        $orient.textContent = getScreenAngle();
-      });
-      // 초기 화면 회전값 표시
-      $orient.textContent = getScreenAngle();
+      
     }
 
     btn.addEventListener('click', () => {
@@ -161,6 +159,7 @@
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
             if (permissionState === 'granted') {
+              add();
               startReading();
             } else {
               alert('Permission denied');
