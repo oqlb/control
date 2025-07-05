@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>스티어링 휠 Tilt & Rotation 측정</title>
+  <title>자이로 센서 Tilt & Rotation 측정</title>
   <style>
     body {
       display: flex;
@@ -31,34 +31,14 @@
     }
     .reading {
       display: none;
+      background: #fff;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       text-align: center;
       margin-top: 1rem;
     }
-    .reading p {
-      margin: 0.3rem 0;
-      font-size: 1.1rem;
-    }
-    /* Steering wheel container */
-    #wheel {
-      position: relative;
-      width: 200px;
-      height: 200px;
-      border: 6px solid #333;
-      border-radius: 50%;
-      margin: 1rem 0;
-      background: #fff;
-    }
-    /* Needle */
-    #needle {
-      position: absolute;
-      bottom: 50%;
-      left: 50%;
-      width: 4px;
-      height: 80px;
-      background: #d00;
-      transform-origin: 50% 100%;
-      transform: rotate(0deg);
-    }
+    .reading p { margin: 0.5rem 0; font-size: 1.2rem; }
   </style>
 </head>
 <body>
@@ -66,12 +46,9 @@
   <button id="enable">모션 센서 활성화</button>
 
   <div class="reading">
-    <div id="wheel">
-      <div id="needle"></div>
-    </div>
+    <p>Alpha (회전 각도): <span id="alpha">0</span>°</p>
     <p>Gamma (좌/우 기울기): <span id="gamma">0</span>°</p>
     <p>Beta (앞/뒤 기울기): <span id="beta">0</span>°</p>
-    <p>Alpha (회전 각도): <span id="alpha">0</span>°</p>
     <p>Orientation (화면 회전): <span id="orient">0</span>°</p>
   </div>
 
@@ -82,7 +59,6 @@
     const $gamma  = document.getElementById('gamma');
     const $beta   = document.getElementById('beta');
     const $orient = document.getElementById('orient');
-    const needle  = document.getElementById('needle');
 
     // 화면 회전 각도 반환 (0, 90, 180, 270)
     function getScreenAngle() {
@@ -94,28 +70,26 @@
 
     // 센서 데이터 핸들러
     function handleOrientation(event) {
-      const rawA = event.alpha; // Z축 회전(0~360)
-      const rawG = event.gamma; // 좌/우 tilt (–90~+90)
-      const rawB = event.beta;  // 앞/뒤 tilt (–180~+180)
+      // event.alpha: Z축 회전(0~360), event.gamma: 좌/우 tilt, event.beta: 앞/뒤 tilt
+      let rawA = event.alpha;
+      let rawG = event.gamma;
+      let rawB = event.beta;
       const angle = getScreenAngle();
+      $orient.textContent = angle;
 
-      // 화면 회전(orientation) 보정: γ, β 재매핑
+      // 화면 회전 보정 (γ, β만 보정; α는 전역 기준)
       let gamma = rawG, beta = rawB;
       if (angle === 90)       { gamma = rawB;  beta = -rawG; }
       else if (angle === 270) { gamma = -rawB; beta = rawG; }
       else if (angle === 180) { gamma = -rawG; beta = -rawB; }
 
-      // 수치 표시
+      // 화면에 표시
       $alpha.textContent = rawA !== null ? Math.round(rawA) : '–';
       $gamma.textContent = rawG !== null ? Math.round(gamma) : '–';
       $beta.textContent  = rawB !== null ? Math.round(beta)  : '–';
-      $orient.textContent = angle;
-
-      // 바늘 회전 (핸들 돌리기 느낌): gamma 범위 ±90도 반영
-      needle.style.transform = `rotate(${gamma}deg)`;
     }
 
-    // 센서 리스너 시작
+    // 권한 요청 및 리스너 등록
     function startReading() {
       reading.style.display = 'block';
       btn.style.display = 'none';
@@ -123,23 +97,26 @@
       window.addEventListener('orientationchange', () => {
         $orient.textContent = getScreenAngle();
       });
+      // 초기 화면 회전값 표시
       $orient.textContent = getScreenAngle();
     }
 
-    // 권한 요청 및 이벤트 등록
-    btn.addEventListener('click', () => {
+    setTimeout(3000, () => {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
             if (permissionState === 'granted') {
               startReading();
             } else {
-              alert('센서 권한이 거부되었습니다.');
+              alert('Permission denied');
+              location.href = location.href;
+              
             }
           })
           .catch(err => {
             console.error(err);
-            alert('권한 요청 중 오류가 발생했습니다.');
+            alert('Err: p');
+            location.href = location.href;
           });
       } else {
         startReading();
