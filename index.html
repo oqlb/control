@@ -49,9 +49,13 @@
             data : {"di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
             dataType : 'html',
             success: function (data) {
-                if(data == "ERR") {
+                if(data == "FALSE") {
                     alert("관리자를 호출해주세요: PE ERR");
-                }
+                }else if(data == "TRUE") {
+
+                }else {
+                    alert("병신")
+                } 
                 
             },
             error: function (data) {
