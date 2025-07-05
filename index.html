@@ -48,16 +48,14 @@
             method: 'post',
             data : {"di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
             dataType : 'html',
-            success: function (data, status, xhr) {
-                console.log("data : : " + JSON.stringify(data));
-                $("#search_result").empty();
-                $("#search_result").replaceWith(data);
+            success: function (data) {
+                if(data == "ERR") {
+                    alert("관리자를 호출해주세요: PE ERR");
+                }
+                
             },
-            error: function (data, status, err) {
-            },
-            complete: function () {
-                var total = $("#dataCount").val();
-                $("#totalCount").text(addComma(total));
+            error: function (data) {
+              alert("관리자를 호출해주세요: AE ERR");
             }
         });
       }
