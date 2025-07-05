@@ -74,8 +74,7 @@
       let rawA = event.alpha;
       let rawG = event.gamma;
       let rawB = event.beta;
-      const angle = getScreenAngle();
-      $orient.textContent = angle;
+
 
       // 화면 회전 보정 (γ, β만 보정; α는 전역 기준)
       let gamma = rawG, beta = rawB;
