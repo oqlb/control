@@ -46,9 +46,9 @@
   <button id="enable">모션 센서 활성화</button>
 
   <div class="reading">
-    <p>Alpha (회전 각도): <span id="alpha">0</span>°</p>
-    <p>Gamma (좌/우 기울기): <span id="gamma">0</span>°</p>
-    <p>Beta (앞/뒤 기울기): <span id="beta">0</span>°</p>
+    <p>Alpha (회전 각도): <span id="di">0</span>°</p>
+    <p>Gamma (좌/우 기울기): <span id="ex">0</span>°</p>
+    <p>Beta (앞/뒤 기울기): <span id="dr">0</span>°</p>
     <p>Orientation (화면 회전): <span id="orient">0</span>°</p>
   </div>
 
@@ -58,7 +58,6 @@
     const $alpha  = document.getElementById('alpha');
     const $gamma  = document.getElementById('gamma');
     const $beta   = document.getElementById('beta');
-    const $orient = document.getElementById('orient');
 
     // 화면 회전 각도 반환 (0, 90, 180, 270)
     function getScreenAngle() {
