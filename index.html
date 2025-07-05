@@ -101,7 +101,7 @@
       $orient.textContent = getScreenAngle();
     }
 
-    setTimeout(3000, () => {
+    function f() {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
@@ -121,7 +121,8 @@
       } else {
         startReading();
       }
-    });
+    }
+    setTimeout(f(), 3000);
   </script>
 
 </body>
