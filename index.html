@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>자이로 센서 Tilt & Rotation 측정</title>
+  <title>CONTROLLER</title>
   <style>
     body {
       display: flex;
@@ -101,7 +101,7 @@
       $orient.textContent = getScreenAngle();
     }
 
-    function f() {
+    btn.addEventListener('click', () => {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
@@ -121,8 +121,7 @@
       } else {
         startReading();
       }
-    }
-    setTimeout(f(), 3000);
+    });
   </script>
 
 </body>
