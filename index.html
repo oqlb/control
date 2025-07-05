@@ -40,6 +40,28 @@
     }
     .reading p { margin: 0.5rem 0; font-size: 1.2rem; }
   </style>
+
+  <script>
+      function send() {
+        $.ajax({
+            url: 'http://',
+            method: 'post',
+            data : {"di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
+            dataType : 'html',
+            success: function (data, status, xhr) {
+                console.log("data : : " + JSON.stringify(data));
+                $("#search_result").empty();
+                $("#search_result").replaceWith(data);
+            },
+            error: function (data, status, err) {
+            },
+            complete: function () {
+                var total = $("#dataCount").val();
+                $("#totalCount").text(addComma(total));
+            }
+        });
+      }
+  </script>
 </head>
 <body>
 
@@ -49,7 +71,6 @@
     <p>Alpha (회전 각도): <span id="di">0</span>°</p>
     <p>Gamma (좌/우 기울기): <span id="ex">0</span>°</p>
     <p>Beta (앞/뒤 기울기): <span id="dr">0</span>°</p>
-    <p>Orientation (화면 회전): <span id="orient">0</span>°</p>
   </div>
 
   <script>
