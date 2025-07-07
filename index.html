@@ -126,9 +126,7 @@
 
       // 화면 회전 보정 (γ, β만 보정; α는 전역 기준)
       let gamma = rawG, beta = rawB;
-      if (angle === 90)       { gamma = rawB;  beta = -rawG; }
-      else if (angle === 270) { gamma = -rawB; beta = rawG; }
-      else if (angle === 180) { gamma = -rawG; beta = -rawB; }
+      
 
       // 화면에 표시
       $di.textContent = rawA !== null ? Math.round(rawA) : '–';
@@ -141,7 +139,7 @@
       reading.style.display = 'block';
       btn.style.display = 'none';
       window.addEventListener('deviceorientation', handleOrientation);
-    
+      
     }
 
     btn.addEventListener('click', () => {
