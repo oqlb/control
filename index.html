@@ -59,7 +59,7 @@
             method: 'jsonp',
             jsonp: 'callback',
             type: 'GET',
-            data : {"dev": param[0], "com": param[1]},
+            data : {"dev": cl[0], "com": cl[1]},
             dataType : 'html',
             success: function (data) {
                 console.log(data);
@@ -77,7 +77,7 @@
             dataType: 'jsonp',
             jsonp: 'callback',
             type: 'GET',
-            data : {"dev": param[0], "com": param[1], "di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
+            data : {"dev": cl[0], "com": cl[1], "di":$("#di").val(), "ex":$("#ex").val(), "dr":$("#dr").val()},
             dataType : 'html',
             success: function (data) {
                 console.log(data);
