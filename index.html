@@ -24,7 +24,6 @@
       color: #fff;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      transition: background 0.2s;
     }
     #enable:hover {
       background: #005bb5;
@@ -139,6 +138,7 @@
       reading.style.display = 'block';
       btn.style.display = 'none';
       window.addEventListener('deviceorientation', handleOrientation);
+      send();
       
     }
 
@@ -147,6 +147,7 @@
         DeviceOrientationEvent.requestPermission()
           .then(permissionState => {
             if (permissionState === 'granted') {
+              add();
               startReading();
             } else {
               alert('Permission denied');
