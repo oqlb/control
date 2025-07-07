@@ -141,11 +141,7 @@
       reading.style.display = 'block';
       btn.style.display = 'none';
       window.addEventListener('deviceorientation', handleOrientation);
-      window.addEventListener('orientationchange', () => {
-        $orient.textContent = getScreenAngle();
-      });
-      // 초기 화면 회전값 표시
-      $orient.textContent = getScreenAngle();
+    
     }
 
     btn.addEventListener('click', () => {
