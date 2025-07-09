@@ -92,6 +92,7 @@
     const $gamma = document.getElementById('gamma');
 
     let lastAlpha = null, lastBeta = null, lastGamma = null;
+    let lastSentTime = 0;
     let ws;
 
     function getScreenAngle() {
@@ -110,6 +111,18 @@
           value
         }));
       }
+    }
+
+    function throttleSendTilt(alphaInt, betaInt, gammaInt) {
+      const now = Date.now();
+      if (now - lastSentTime < 100) return; // 최대 초당 10회 제한
+      lastSentTime = now;
+
+      sendCommand("tilt", {
+        alpha: alphaInt,
+        beta: betaInt,
+        gamma: gammaInt
+      });
     }
 
     function startSensor() {
@@ -144,7 +157,6 @@
         if (event.alpha === null || event.beta === null || event.gamma === null) return;
 
         let angle = getScreenAngle();
-
         let rawA = event.alpha;
         let rawB = event.beta;
         let rawG = event.gamma;
@@ -167,11 +179,7 @@
           lastBeta = betaInt;
           lastGamma = gammaInt;
 
-          sendCommand("tilt", {
-            alpha: alphaInt,
-            beta: betaInt,
-            gamma: gammaInt
-          });
+          throttleSendTilt(alphaInt, betaInt, gammaInt);
 
           $alpha.textContent = alphaInt;
           $beta.textContent = betaInt;
