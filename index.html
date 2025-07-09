@@ -75,8 +75,6 @@
 
   <div class="reading" id="reading">
     <div>Alpha: <span id="alpha">–</span></div>
-    <div>Beta: <span id="beta">–</span></div>
-    <div>Gamma: <span id="gamma">–</span></div>
   </div>
 
   <script>
@@ -88,21 +86,12 @@
     const statusEl = document.getElementById('status');
     const readingBox = document.getElementById('reading');
     const $alpha = document.getElementById('alpha');
-    const $beta = document.getElementById('beta');
-    const $gamma = document.getElementById('gamma');
 
-    let lastAlpha = null, lastBeta = null, lastGamma = null;
+    let lastAlpha = null;
     let lastSentTime = 0;
-    const sendInterval = 100; // 100ms = 10회/초
+    const sendInterval = 100; // 100ms
 
     let ws;
-
-    function getScreenAngle() {
-      if (screen.orientation && typeof screen.orientation.angle === 'number') {
-        return screen.orientation.angle;
-      }
-      return window.orientation || 0;
-    }
 
     function sendCommand(com, value) {
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -123,6 +112,7 @@
       ws = new WebSocket("wss://oqlb.kro.kr/");
 
       ws.addEventListener("open", () => {
+        // register 메시지 보내기
         sendCommand("register", {
           client: "html",
           com_id,
@@ -142,48 +132,21 @@
       document.getElementById("boostBtn").addEventListener("touchstart", () => sendCommand("boost", true));
       document.getElementById("boostBtn").addEventListener("touchend", () => sendCommand("boost", false));
 
-      // 센서 이벤트
+      // Device orientation - alpha만 전송
       window.addEventListener('deviceorientation', (event) => {
-        if (event.alpha === null || event.beta === null || event.gamma === null) return;
+        if (event.alpha === null) return;
 
         let now = Date.now();
-        if (now - lastSentTime < sendInterval) return; // 빈도 제한
+        if (now - lastSentTime < sendInterval) return;
 
-        let angle = getScreenAngle();
+        const alphaInt = Math.round(event.alpha);
 
-        let rawA = event.alpha;
-        let rawB = event.beta;
-        let rawG = event.gamma;
-
-        let gamma = rawG, beta = rawB;
-        if (angle === 90)       { gamma = rawB;  beta = -rawG; }
-        else if (angle === 270) { gamma = -rawB; beta = rawG; }
-        else if (angle === 180) { gamma = -rawG; beta = -rawB; }
-
-        const alphaInt = Math.round(rawA);
-        const betaInt = Math.round(beta);
-        const gammaInt = Math.round(gamma);
-
-        if (
-          lastAlpha === null || lastBeta === null || lastGamma === null ||
-          Math.abs(alphaInt - lastAlpha) >= 2 ||
-          Math.abs(betaInt - lastBeta) >= 2 ||
-          Math.abs(gammaInt - lastGamma) >= 2
-        ) {
+        if (lastAlpha === null || Math.abs(alphaInt - lastAlpha) >= 2) {
           lastAlpha = alphaInt;
-          lastBeta = betaInt;
-          lastGamma = gammaInt;
           lastSentTime = now;
 
-          sendCommand("tilt", {
-            alpha: alphaInt,
-            beta: betaInt,
-            gamma: gammaInt
-          });
-
+          sendCommand("tilt", alphaInt);
           $alpha.textContent = alphaInt;
-          $beta.textContent = betaInt;
-          $gamma.textContent = gammaInt;
         }
       });
     }
