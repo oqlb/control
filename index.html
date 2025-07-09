@@ -68,7 +68,7 @@
     const com_id = params.get("com_id") || "unknown_com";
     const device_id = params.get("device_id") || "unknown_device";
 
-    const ws = new WebSocket("ws://180.224.79.19:8080/"); // 서버 주소 변경 필요
+    const ws = new WebSocket("wss://180.224.79.19:8080/"); // 서버 주소 변경 필요
 
     ws.addEventListener("open", () => {
       ws.send(JSON.stringify({
