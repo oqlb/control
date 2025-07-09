@@ -93,6 +93,8 @@
 
     let lastAlpha = null, lastBeta = null, lastGamma = null;
     let lastSentTime = 0;
+    const sendInterval = 100; // 100ms = 10회/초
+
     let ws;
 
     function getScreenAngle() {
@@ -111,18 +113,6 @@
           value
         }));
       }
-    }
-
-    function throttleSendTilt(alphaInt, betaInt, gammaInt) {
-      const now = Date.now();
-      if (now - lastSentTime < 100) return; // 최대 초당 10회 제한
-      lastSentTime = now;
-
-      sendCommand("tilt", {
-        alpha: alphaInt,
-        beta: betaInt,
-        gamma: gammaInt
-      });
     }
 
     function startSensor() {
@@ -156,7 +146,11 @@
       window.addEventListener('deviceorientation', (event) => {
         if (event.alpha === null || event.beta === null || event.gamma === null) return;
 
+        let now = Date.now();
+        if (now - lastSentTime < sendInterval) return; // 빈도 제한
+
         let angle = getScreenAngle();
+
         let rawA = event.alpha;
         let rawB = event.beta;
         let rawG = event.gamma;
@@ -171,15 +165,21 @@
         const gammaInt = Math.round(gamma);
 
         if (
-          alphaInt !== lastAlpha ||
-          betaInt !== lastBeta ||
-          gammaInt !== lastGamma
+          lastAlpha === null || lastBeta === null || lastGamma === null ||
+          Math.abs(alphaInt - lastAlpha) >= 2 ||
+          Math.abs(betaInt - lastBeta) >= 2 ||
+          Math.abs(gammaInt - lastGamma) >= 2
         ) {
           lastAlpha = alphaInt;
           lastBeta = betaInt;
           lastGamma = gammaInt;
+          lastSentTime = now;
 
-          throttleSendTilt(alphaInt, betaInt, gammaInt);
+          sendCommand("tilt", {
+            alpha: alphaInt,
+            beta: betaInt,
+            gamma: gammaInt
+          });
 
           $alpha.textContent = alphaInt;
           $beta.textContent = betaInt;
