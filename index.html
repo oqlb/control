@@ -48,6 +48,16 @@
       font-size: 14px;
       color: #333;
     }
+
+    .reading {
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    .reading div {
+      margin: 4px;
+    }
   </style>
 </head>
 <body>
@@ -60,29 +70,39 @@
     <button id="boostBtn" class="btn full-width">부스터 🔥</button>
   </div>
 
-  <div class="info" id="status">연결 대기 중...</div>
+  <div class="info" id="status">센서 권한을 허용해주세요</div>
+  <button id="enable" class="btn full-width">센서 사용 시작</button>
+
+  <div class="reading" id="reading">
+    <div>Alpha: <span id="alpha">–</span></div>
+    <div>Beta: <span id="beta">–</span></div>
+    <div>Gamma: <span id="gamma">–</span></div>
+  </div>
 
   <script>
-    // 📌 URL에서 com_id, device_id 추출
     const params = new URLSearchParams(window.location.search);
     const com_id = params.get("com_id") || "unknown_com";
     const device_id = params.get("device_id") || "unknown_device";
 
-    const ws = new WebSocket("wss://oqlb.kro.kr/"); // 서버 주소 변경 필요
+    const btnStart = document.getElementById('enable');
+    const statusEl = document.getElementById('status');
+    const readingBox = document.getElementById('reading');
+    const $alpha = document.getElementById('alpha');
+    const $beta = document.getElementById('beta');
+    const $gamma = document.getElementById('gamma');
 
-    ws.addEventListener("open", () => {
-      ws.send(JSON.stringify({
-        type: "register",
-        client: "html",
-        com_id,
-        device_id
-      }));
+    let lastAlpha = null, lastBeta = null, lastGamma = null;
+    let ws;
 
-      document.getElementById("status").textContent = `연결됨: ${com_id} / ${device_id}`;
-    });
+    function getScreenAngle() {
+      if (screen.orientation && typeof screen.orientation.angle === 'number') {
+        return screen.orientation.angle;
+      }
+      return window.orientation || 0;
+    }
 
     function sendCommand(com, value) {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           com_id,
           device_id,
@@ -92,25 +112,90 @@
       }
     }
 
-    // 버튼 이벤트 처리
-    document.getElementById("accelerateBtn").addEventListener("touchstart", () => sendCommand("accelerate", true));
-    document.getElementById("accelerateBtn").addEventListener("touchend", () => sendCommand("accelerate", false));
-    
-    document.getElementById("brakeBtn").addEventListener("touchstart", () => sendCommand("brake", true));
-    document.getElementById("brakeBtn").addEventListener("touchend", () => sendCommand("brake", false));
+    function startSensor() {
+      readingBox.style.display = 'block';
+      btnStart.style.display = 'none';
+      statusEl.textContent = '연결 중...';
 
-    document.getElementById("boostBtn").addEventListener("touchstart", () => sendCommand("boost", true));
-    document.getElementById("boostBtn").addEventListener("touchend", () => sendCommand("boost", false));
+      ws = new WebSocket("wss://oqlb.kro.kr/");
 
-    // Device orientation 전송
-    window.addEventListener("deviceorientation", (event) => {
-      const { alpha, beta, gamma } = event;
+      ws.addEventListener("open", () => {
+        sendCommand("register", {
+          client: "html",
+          com_id,
+          device_id
+        });
 
-      sendCommand("tilt", {
-        alpha: parseFloat(alpha.toFixed(2)),
-        beta: parseFloat(beta.toFixed(2)),
-        gamma: parseFloat(gamma.toFixed(2))
+        statusEl.textContent = `연결됨: ${com_id} / ${device_id}`;
       });
+
+      // 버튼 이벤트
+      document.getElementById("accelerateBtn").addEventListener("touchstart", () => sendCommand("accelerate", true));
+      document.getElementById("accelerateBtn").addEventListener("touchend", () => sendCommand("accelerate", false));
+
+      document.getElementById("brakeBtn").addEventListener("touchstart", () => sendCommand("brake", true));
+      document.getElementById("brakeBtn").addEventListener("touchend", () => sendCommand("brake", false));
+
+      document.getElementById("boostBtn").addEventListener("touchstart", () => sendCommand("boost", true));
+      document.getElementById("boostBtn").addEventListener("touchend", () => sendCommand("boost", false));
+
+      // 센서 이벤트
+      window.addEventListener('deviceorientation', (event) => {
+        if (event.alpha === null || event.beta === null || event.gamma === null) return;
+
+        let angle = getScreenAngle();
+
+        let rawA = event.alpha;
+        let rawB = event.beta;
+        let rawG = event.gamma;
+
+        let gamma = rawG, beta = rawB;
+        if (angle === 90)       { gamma = rawB;  beta = -rawG; }
+        else if (angle === 270) { gamma = -rawB; beta = rawG; }
+        else if (angle === 180) { gamma = -rawG; beta = -rawB; }
+
+        const alphaInt = Math.round(rawA);
+        const betaInt = Math.round(beta);
+        const gammaInt = Math.round(gamma);
+
+        if (
+          alphaInt !== lastAlpha ||
+          betaInt !== lastBeta ||
+          gammaInt !== lastGamma
+        ) {
+          lastAlpha = alphaInt;
+          lastBeta = betaInt;
+          lastGamma = gammaInt;
+
+          sendCommand("tilt", {
+            alpha: alphaInt,
+            beta: betaInt,
+            gamma: gammaInt
+          });
+
+          $alpha.textContent = alphaInt;
+          $beta.textContent = betaInt;
+          $gamma.textContent = gammaInt;
+        }
+      });
+    }
+
+    btnStart.addEventListener('click', () => {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') {
+              startSensor();
+            } else {
+              alert("센서 권한이 필요합니다.");
+            }
+          }).catch(err => {
+            console.error(err);
+            alert("오류: " + err);
+          });
+      } else {
+        startSensor();
+      }
     });
   </script>
 </body>
