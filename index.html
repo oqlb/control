@@ -141,7 +141,7 @@
 
         const alphaInt = Math.round(event.alpha);
 
-        if (lastAlpha === null || Math.abs(alphaInt - lastAlpha) >= 4) {
+        if (lastAlpha === null || Math.abs(alphaInt - lastAlpha) >= 2) {
           lastAlpha = alphaInt;
           lastSentTime = now;
 
